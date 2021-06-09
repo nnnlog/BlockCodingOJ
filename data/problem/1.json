@@ -1,0 +1,15 @@
+{
+  "problem_id": 1,
+  "title": "Hello, World!",
+  "statement": {
+	"body": "Hello, World!를 출력하시오.",
+	"example": [
+	  {
+		"input": "없음",
+		"output": "Hello, World!"
+	  }
+	]
+  },
+  "ac": 0,
+  "submit": 0
+}
