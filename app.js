@@ -13,6 +13,7 @@ app.use(bodyParser.json());
 
 app.use('/api/', require('./routes/api'));
 app.use(express.static(`${__dirname}/static/dist/`));
+app.use((req, res) => res.sendFile(`${__dirname}/static/dist/index.html`));
 
 (async () => {
 	await require("./lib/db").connect();
@@ -21,12 +22,4 @@ app.use(express.static(`${__dirname}/static/dist/`));
 	app.listen(80, () => {
 		console.log("Express server is listening on port 80.")
 	});
-	/*
-		await auth.register({
-			user_id: 'admin',
-			pw: 'test',
-		});
-		await auth.login('admin');
-	 */
-
 })();
