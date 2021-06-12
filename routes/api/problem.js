@@ -21,7 +21,7 @@ router.get("/recent", async (req, res) => {
 	}
 });
 
-router.get("/:id", async (req, res) => {
+router.use('/:id', async (req, res, next) => {
 	try {
 		let {id} = req.params;
 		if (typeof id !== "string") {
@@ -39,12 +39,108 @@ router.get("/:id", async (req, res) => {
 			}));
 			return;
 		}
+		req.problemData = ret;
+		next();
+	} catch (e) {
+		console.log('api/prob/:id, preprocess - error', e);
+		res.end(JSON.stringify({
+			status: 500,
+		}));
+	}
+});
+
+router.get('/:id/', (req, res) => {
+	try {
 		res.end(JSON.stringify({
 			status: 0,
-			result: ret
+			result: req.problemData
 		}));
 	} catch (e) {
 		console.log('api/prob/:id - error', e);
+		res.end(JSON.stringify({
+			status: 500,
+		}));
+	}
+});
+
+router.get("/:id/load", async (req, res) => {
+	try {
+		let xml = req.loginData.db.xml[req.problemData.problem_id];
+		if (xml === undefined) {
+			res.end(JSON.stringify({
+				status: 1,
+			}));
+		} else {
+			res.end(JSON.stringify({
+				status: 0,
+				result: xml
+			}));
+		}
+	} catch (e) {
+		console.log('api/prob/:id/load - error', e);
+		res.end(JSON.stringify({
+			status: 500,
+		}));
+	}
+});
+
+router.post("/:id/save", async (req, res) => {
+	try {
+		let {xml} = req.body;
+		if (typeof xml !== "string") {
+			res.end(JSON.stringify({
+				status: 500,
+			}));
+			return;
+		}
+		xml = xml.trim();
+		let obj = req.loginData.db.xml;
+		if (xml === "") {
+			if (obj[req.problemData.problem_id] !== undefined) delete obj[req.problemData.problem_id];
+		} else {
+			obj[req.problemData.problem_id] = xml;
+		}
+		await db.user().findOneAndUpdate({user_id: req.loginData.id}, {$set: {xml: obj}});
+		res.end(JSON.stringify({
+			status: 0,
+		}));
+	} catch (e) {
+		console.log('api/prob/:id/save - error', e);
+		res.end(JSON.stringify({
+			status: 500,
+		}));
+	}
+});
+
+router.post("/:id/submit", async (req, res) => {
+	try {
+		let {xml} = req.body;
+		if (typeof xml !== "string") {
+			res.end(JSON.stringify({
+				status: 500,
+			}));
+			return;
+		}
+		xml = xml.trim();
+		let submission_id = await db.counters.getNextSubmissionId();
+		await db.submission().insertMany({
+			submission_id,
+			user_id: req.loginData.id,
+			problem_id: req.problemData.problem_id,
+			source_code: xml,
+			date: Date.now(),
+			judge_result: {
+				verdict: (Math.random() > 0.5) + 1, // TODO: 채점하고 나서 바꾸기
+			},
+			test: {
+				is_test: false
+			}
+		});
+		res.end(JSON.stringify({
+			status: 0,
+		}));
+	} catch (e) {
+		console.log('api/prob/:id/submit - error', e);
 		res.end(JSON.stringify({
 			status: 500,
 		}));
