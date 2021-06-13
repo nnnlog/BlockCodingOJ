@@ -84,7 +84,6 @@ router.get("/problem/:problem_id", async (req, res) => {
 
 router.get("/user/:user_id", async (req, res) => {
 	try {
-		console.log(req.query, req.params);
 		let {page} = req.query;
 		if (isNaN(page)) {
 			res.end(JSON.stringify({

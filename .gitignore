@@ -2,3 +2,4 @@
 setting.json
 *.iml
 node_modules
+data/ssl

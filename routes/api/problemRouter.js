@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 
 const db = require("../../lib/db");
+const judge = require("../../lib/judge");
+const verdict = require("../../lib/verdict");
 
 router.get("/recent", async (req, res) => {
 	try {
@@ -21,18 +23,16 @@ router.get("/recent", async (req, res) => {
 	}
 });
 
-router.use('/:id', async (req, res, next) => {
+router.use('/:problem_id', async (req, res, next) => {
 	try {
-		let {id} = req.params;
-		if (typeof id !== "string") {
+		let {problem_id} = req.params;
+		if (isNaN(id)) {
 			res.end(JSON.stringify({
 				status: 500
 			}));
 			return;
 		}
-		let ret = await db.problem().findOne({
-			problem_id: id
-		}, {_id: 0,});
+		let ret = await db.problem().findOne({problem_id}, {_id: 0,});
 		if (ret === null) {
 			res.end(JSON.stringify({
 				status: 1
@@ -42,7 +42,7 @@ router.use('/:id', async (req, res, next) => {
 		req.problemData = ret;
 		next();
 	} catch (e) {
-		console.log('api/prob/:id, preprocess - error', e);
+		console.log('[api/prob/:id, preprocess - error', e);
 		res.end(JSON.stringify({
 			status: 500,
 		}));
@@ -61,6 +61,14 @@ router.get('/:id/', (req, res) => {
 			status: 500,
 		}));
 	}
+});
+
+router.use((req, res, next) => {
+	if (req.loginData === undefined) {
+		res.end(JSON.stringify({
+			status: 403,
+		}));
+	} else next();
 });
 
 router.get("/:id/load", async (req, res) => {
@@ -122,20 +130,21 @@ router.post("/:id/submit", async (req, res) => {
 			return;
 		}
 		xml = xml.trim();
-		let submission_id = await db.counters.getNextSubmissionId();
-		await db.submission().insertMany({
+		let submission_id = await db.counters.getNextSubmissionId(), sub;
+		await db.submission().insertMany(sub = {
 			submission_id,
 			user_id: req.loginData.id,
 			problem_id: req.problemData.problem_id,
 			source_code: xml,
 			date: Date.now(),
 			judge_result: {
-				verdict: (Math.random() > 0.5) + 1, // TODO: 채점하고 나서 바꾸기
+				verdict: verdict.code.JUDGING,
 			},
 			test: {
 				is_test: false
 			}
 		});
+		judge(sub);
 		res.end(JSON.stringify({
 			status: 0,
 		}));

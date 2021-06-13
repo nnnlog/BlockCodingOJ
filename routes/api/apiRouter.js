@@ -26,9 +26,9 @@ router.use(async (req, res, next) => {
 	next();
 });
 
-router.use('/auth/', require("./auth"));
-router.use('/prob/', require("./problem"));
-router.use('/submission/', require("./submission"));
+router.use('/auth/', require("./authRouter"));
+router.use('/prob/', require("./problemRouter"));
+router.use('/submission/', require("./submissionRouter"));
 
 router.use((req, res) => res.end(JSON.stringify({
 	status: 404,
