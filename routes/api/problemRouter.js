@@ -130,6 +130,9 @@ router.post("/:id/submit", queue({activeLimit: 1, queuedLimit: -1}), async (req,
 			}));
 			return;
 		}
+		req.loginData.db = await db.user().findOne({
+			user_id: req.loginData.id
+		});
 		if ((new Date(req.loginData.db.lastSubmitTime)).getTime() + 1000 * 5 > Date.now()) {
 			res.end(JSON.stringify({
 				status: 1,
