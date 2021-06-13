@@ -26,7 +26,7 @@ router.get("/recent", async (req, res) => {
 router.use('/:problem_id', async (req, res, next) => {
 	try {
 		let {problem_id} = req.params;
-		if (isNaN(id)) {
+		if (isNaN(problem_id)) {
 			res.end(JSON.stringify({
 				status: 500
 			}));
