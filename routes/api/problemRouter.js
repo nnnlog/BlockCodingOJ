@@ -130,7 +130,7 @@ router.post("/:id/submit", queue({activeLimit: 1, queuedLimit: -1}), async (req,
 			}));
 			return;
 		}
-		if (req.loginData.db.lastSubmitTime + 1000 * 5 > Date.now()) {
+		if ((new Date(req.loginData.db.lastSubmitTime)).getTime() + 1000 * 5 > Date.now()) {
 			res.end(JSON.stringify({
 				status: 1,
 				message: "마지막 제출 5초 후에 제출할 수 있습니다."
