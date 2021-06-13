@@ -158,6 +158,7 @@ router.post("/:id/submit", queue({activeLimit: 1, queuedLimit: -1}), async (req,
 			$set: {
 				try: req.loginData.db.try,
 				lastSubmitTime: Date.now(),
+				submissions: req.loginData.db.submissions,
 			}
 		});
 		req.problemData.try[req.loginData.id] = 1;
