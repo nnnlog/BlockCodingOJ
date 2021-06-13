@@ -1,4 +1,5 @@
 const express = require("express");
+const queue = require("express-queue");
 const router = express.Router();
 
 const db = require("../../lib/db");
@@ -120,12 +121,19 @@ router.post("/:id/save", async (req, res) => {
 	}
 });
 
-router.post("/:id/submit", async (req, res) => {
+router.post("/:id/submit", queue({activeLimit: 1, queuedLimit: -1}), async (req, res) => {
 	try {
 		let {xml} = req.body;
 		if (typeof xml !== "string") {
 			res.end(JSON.stringify({
 				status: 500,
+			}));
+			return;
+		}
+		if (req.loginData.db.lastSubmitTime + 1000 * 5 > Date.now()) {
+			res.end(JSON.stringify({
+				status: 1,
+				message: "마지막 제출 5초 후에 제출할 수 있습니다."
 			}));
 			return;
 		}
@@ -142,6 +150,27 @@ router.post("/:id/submit", async (req, res) => {
 			},
 			test: {
 				is_test: false
+			}
+		});
+		req.loginData.db.submissions.push(submission_id);
+		req.loginData.db.try[req.problemData.problem_id] = 1;
+		await db.user().findOneAndUpdate({user_id: req.loginData.id}, {
+			$set: {
+				try: req.loginData.db.try,
+				lastSubmitTime: Date.now(),
+			}
+		});
+		req.problemData.try[req.loginData.id] = 1;
+		req.problemData.submissions.push(submission_id);
+		await db.problem().findOneAndUpdate({
+			problem_id: req.problemData.problem_id,
+		}, {
+			$set: {
+				try: req.problemData.try,
+				submissions: req.problemData.submissions,
+			},
+			$inc: {
+				submit: 1,
 			}
 		});
 		judge(sub);

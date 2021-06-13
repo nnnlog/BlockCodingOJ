@@ -4,6 +4,9 @@ const https = require("https");
 const auth = require("./lib/auth");
 auth.init();
 
+const Queue = require("./lib/queue");
+global.updateProblemData = new Queue(10);
+
 const express = require("express");
 const app = express();
 /*
