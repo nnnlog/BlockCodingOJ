@@ -1,4 +1,5 @@
 const fs = require("fs");
+const http = require("http");
 const https = require("https");
 
 const auth = require("./lib/auth");
@@ -25,13 +26,20 @@ app.use((req, res) => res.sendFile(`${__dirname}/static/dist/index.html`));
 	await require("./lib/db").connect();
 	console.log("Success to connect DB");
 
-	https.createServer({
-		cert: fs.readFileSync(`${__dirname}/data/ssl/cert.pem`),
-		ca: fs.readFileSync(`${__dirname}/data/ssl/fullchain.pem`),
-		key: fs.readFileSync(`${__dirname}/data/ssl/privkey.pem`),
-	}, app).listen(443, () => {
+	http.createServer({
+		// cert: fs.readFileSync(`${__dirname}/data/ssl/cert.pem`),
+		// ca: fs.readFileSync(`${__dirname}/data/ssl/fullchain.pem`),
+		// key: fs.readFileSync(`${__dirname}/data/ssl/privkey.pem`),
+	}, app).listen(80, () => {
 		console.log("Express server is listening on port 80.")
 	});
+	// https.createServer({
+	// 	cert: fs.readFileSync(`${__dirname}/data/ssl/cert.pem`),
+	// 	ca: fs.readFileSync(`${__dirname}/data/ssl/fullchain.pem`),
+	// 	key: fs.readFileSync(`${__dirname}/data/ssl/privkey.pem`),
+	// }, app).listen(443, () => {
+	// 	console.log("Express server is listening on port 443.")
+	// });
 
 	express().use((req, res) => res.redirect('https://dnhs.me')).listen(80);
 })();
